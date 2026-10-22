@@ -146,7 +146,19 @@ class SessionManager:
         return SessionContext(metadata=metadata, transcript=transcript)
 
     def _enforce_rotation(self) -> None:
-        sessions = sorted(self.root.iterdir(), key=lambda p: p.stat().st_mtime, reverse=True)
+        # A session directory's mtime can be too coarse when many sessions are
+        # created in one burst. The atomically replaced state file is the
+        # authoritative write and carries nanosecond-resolution recency. A
+        # todo-only session has no state file yet, so fall back to its directory.
+        def modified_at_ns(session_dir: Path) -> int:
+            state_path = session_dir / "state.json"
+            return (state_path if state_path.exists() else session_dir).stat().st_mtime_ns
+
+        sessions = sorted(
+            (path for path in self.root.iterdir() if path.is_dir()),
+            key=modified_at_ns,
+            reverse=True,
+        )
         for extra in sessions[MAX_SESSIONS:]:
             for child in extra.iterdir():
                 child.unlink()

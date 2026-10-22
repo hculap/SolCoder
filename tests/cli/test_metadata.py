@@ -148,6 +148,8 @@ def test_metadata_set_run_aborts_when_bundlr_fails(monkeypatch, tmp_path: Path) 
     app.session_manager.save(app.session_context)
 
     monkeypatch.setattr(md, "_is_token2022_mint", lambda mint, rpc: True)
+    monkeypatch.setattr(md.shutil, "which", lambda _binary: "/usr/bin/spl-token")
+
     def fail_bundlr(*args, **kwargs):
         raise RuntimeError("bundlr down")
 
