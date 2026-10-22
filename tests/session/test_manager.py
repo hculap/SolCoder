@@ -48,6 +48,15 @@ def test_rotation_keeps_recent(tmp_path: Path) -> None:
     assert set(ids[-20:]).issuperset(remaining)
 
 
+def test_rotation_tolerates_todo_only_session(tmp_path: Path) -> None:
+    manager = SessionManager(root=tmp_path)
+    manager.save_todo("todo-only", {"items": []})
+
+    manager.start()
+
+    assert manager.todo_exists("todo-only")
+
+
 def test_save_trims_transcript(tmp_path: Path) -> None:
     manager = SessionManager(root=tmp_path)
     context = manager.start()
